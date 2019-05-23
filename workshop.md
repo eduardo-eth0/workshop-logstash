@@ -1,7 +1,5 @@
 # Workshop Logstash
-Indice
 
- 1. List item
 
 ## Introdução
 
@@ -42,11 +40,19 @@ Capturando logs, você tera a possibilidade de capturar logs como:
 - firewall
 
 
+e ainda existe a possibildiade de você fazer um socket tcp ou udp para receber e enviar dados para possiveis pontos não cobertos por plugin! 
+
+### Web
+
+Outro ponto possível também com o ***Logstash*** é transformar suas requisições HTTP em eventos, com isso podemos consumir serviços como:
+
+- Twitter 
+- Webhooks (github, JIRA)
+- Consultar endpoints especificos
+
+Consumindo endpoints http, podemos ainda mais crescer nossa capacidade de coletar eventos de diversas partes do nosso ecossistema.
+
+## Datastore e streams
 
 
-Lidar com todos os tipos de dados de registro
 
-Facilmente ingerir uma infinidade de registros da web, como o Apache, e logs de aplicativos, como log4j para Java
-Capture muitos outros formatos de log como logs de syslog, rede e firewall, e mais
-Aproveite os recursos complementares de encaminhamento seguro de registros com o Filebeat
-Coletar métricas do Ganglia, collectd, NetFlow, JMX e muitas outras plataformas de infraestrutura e aplicativos sobre TCP e UDP
