@@ -108,7 +108,7 @@ Outro ponto bem importante são os codecs que nos ajudam a processar saidas do t
 ## Bora começar isso?
 
 ### Instalando o Logstash
-`O Logstash necessita do Java 8 ou 11 para funcionar podendo ser tanto a versão da oracle quando OpenJDK`
+>O Logstash necessita do Java 8 ou 11 para funcionar podendo ser tanto a versão da oracle quando OpenJDK
 
 Para verificar a sua versão do java use o comando:
 
