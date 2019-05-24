@@ -1,12 +1,6 @@
 # Workshop Logstash
 ![](./images/logstash_logo.png)
 
-
-## Indice
-[TOC]
-
-
-
 ## Introdução
 
 O ***Logstash*** é uma ferramenta de coleta e tratamendo de dados, com recursos em tempo real funcionando como um pipline.
@@ -31,9 +25,9 @@ Isso se torna ainda mais poderoso devido ao seu grande ecossistema de plugins e 
 
 Hoje existem mais de 200 plugins disponiveis.
 
-##Algumas aplicações
+## Algumas aplicações
 
-###Logs e métricas
+### Logs e métricas
 
 Capturando logs, você tera a possibilidade de capturar logs como:
 
