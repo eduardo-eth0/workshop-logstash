@@ -123,4 +123,45 @@ openjdk version "11.0.3" 2019-04-16
 OpenJDK Runtime Environment (build 11.0.3+7-Ubuntu-1ubuntu219.04.1) 
 OpenJDK 64-Bit Server VM (build 11.0.3+7-Ubuntu-1ubuntu219.04.1, mixed mode, sharing)
 ```
+Em alguns sistemas Linux e necessário ter a variável de ambiente **JAVA_HOME** exportada antes de tentar fazer a instalação, principalmente se você fez a sua instalação do Java de forma manual.
 
+### Instalando a partir de repositórios
+
+Estão disponiveis repositórios tanto APT quanto YUM.
+
+As versões do **Logstash** estão distribuidas em repositórios de acordo com o número dela, por exemplo se você quer usar as versões 7.x do **Logstash** você tem que usar esse numero no seu repositório ex:
+
+```
+# Versão 7.x
+deb https://artifacts.elastic.co/packages/7.x/apt stable main
+
+# Versão 6.x
+deb https://artifacts.elastic.co/packages/6.x/apt stable main
+
+```
+
+#### APT
+
+Faça o Download da chave pública
+
+```
+wget -qO - https://artifacts.elastic.co/GPG-KEY-elasticsearch | sudo apt-key add -
+```
+
+Antes de proceguir é necessário instalar o pacote * apt-transport-https * no Debian
+
+```
+sudo apt-get install apt-transport-https
+```
+
+Agora salve o endereço do repositório em * /etc/apt/sources.list.d/elastic-7.x.list *
+
+```
+echo "deb https://artifacts.elastic.co/packages/7.x/apt stable main" | sudo tee -a /etc/apt/sources.list.d/elastic-7.x.list
+
+```
+Rode um * apt update * para deixar o repositório pronto para uso, e depois faça a instalação do *Logstash*
+
+```
+apt update && apt -y install logstash 
+```
