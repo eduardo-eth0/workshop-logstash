@@ -165,3 +165,73 @@ Rode um * apt update * para deixar o repositório pronto para uso, e depois faç
 ```
 apt update && apt -y install logstash 
 ```
+#### YUM
+
+Faça o Download da chave pública
+
+```
+rpm --import https://artifacts.elastic.co/GPG-KEY-elasticsearch
+```
+
+Adicione a seguinte configuração no seu */etc/yum.repos.d/* criando um arquivo com sufixo *.repo*, como por exemplo *logstash.repo* 
+
+```
+[logstash-7.x]
+name=Elastic repository for 7.x packages
+baseurl=https://artifacts.elastic.co/packages/7.x/yum
+gpgcheck=1
+gpgkey=https://artifacts.elastic.co/GPG-KEY-elasticsearch
+enabled=1
+autorefresh=1
+type=rpm-md
+```
+Agora seu repositório já vai estar pronto par ao uso
+
+```
+sudo yum install logstash
+```
+## Tratando seu primeiro evento
+
+Agora que já instalamos o **Logstash** vamos fazer o teste do nosso primeiro pipeline básico!
+
+Para que um pipeline do **Logstash** funcione são necessários no minimo dois elemetos um de *input* e um de *output*, o elemento de *filter* é opcicional.
+
+Um pipeline então é constituido de 3 fases:
+- Input responsável por consumir os dados
+- Filter responsável por transformar os dados
+- Output responsável por escrever os dados no destino
+
+![](./images/basic_logstash_pipeline.png)
+
+Bom agora que você já tem uma ideia de como funciona vamos subir nosso primeiro pipeline básico.
+
+```
+cd logstash-7.1.0
+bin/logstash -e 'input { stdin { } } output { stdout {} }'
+```
+
+```
+A localizção do binario do Logstash vai depender do tipo de instalação que você fez, no caso de ter feito via pacote do sistema operacional verifique se já está no path ou na pasta que seu SO coloca os binários
+```
+
+Quando usamos a flag -e nós especificando que vamos usar uma configruação direto da linha de comando, esse é um tipo de abordagem para você pode testar algum tipo de configuração sem precisar fazer a edição de um arquivo de configuração. 
+
+Descrevendo o pipeline a seguir ele escuta a entrada stdin e move tudo que entrar nela para a saida padão.
+
+Depois de iniciar o Logstash, espere até ver "Pipeline main started" e, em seguida, insira hello world no prompt de comando:
+
+```
+hello world
+2013-11-21T01:22:14.405+0000 0.0.0.0 hello world
+```
+## Processando nosso primeiro Log
+
+Bom, você já criou seu primeiro pipeline e trabalhou o seu primeiro evento, mas no mundo real as coisas não são tão simples assim, apesar de serem fáceis. No mundo real acabamos usando mais de um input, mais de um filtro e mais de um output! 
+
+Nosso primeiro log para ser trabalhado vai ser um log de um apache, basicamente vamos pegar esse log de apache com o **Filebeat** e vamos jogar ele para o **Logstash** onde vamos tratar alguns filtros e depois gravar esse *Output* no **Elasticsearch**.
+
+### Configurando o Filebeat para enviar os logs
+
+Antes de você configurar o seu pipeline você vai ter que configurar o **Filebeat** para enviar os logs para o **Logstash**. O **Filebeat** é um agent extremamente leve e fácil de ser configurado, sua função e fazer a coleta de logs e enviar para algum lugar,que no nosso caso é o **Logstash**. O **Filebeat** deve ser instalado na máquina em que os logs estão sendo gerados.
+
+A instalação padrão do **Logstash** já vem com o plugin de *Input* do *beats* instalado por padrão
