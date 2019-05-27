@@ -1,5 +1,13 @@
 version: '3'
 services:
+  mysql:
+    image: mysql
+    command: --default-authentication-plugin=mysql_native_password
+    environment:
+      MYSQL_ROOT_PASSWORD: x
+      MYSQL_DATABASE: user
+    volumes:
+      - ./sql:/tmp/sql/
   redis:
     image: "redis:alpine"
     ports:
@@ -8,7 +16,10 @@ services:
     image: "docker.elastic.co/logstash/logstash:7.1.0"
     volumes:
       - ./pipeline:/usr/share/logstash/pipeline/
+      - ./sample_csv:/tmp/sample_csv
+      - ./connector:/tmp/connector
     links:
+      - mysql
       - redis
       - elasticsearch
     ports:
