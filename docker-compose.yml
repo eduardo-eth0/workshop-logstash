@@ -1,5 +1,9 @@
 version: '3'
 services:
+  mailcatcher:
+    image: schickling/mailcatcher
+    ports:
+      - 1080:1080
   mysql:
     image: mysql
     command: --default-authentication-plugin=mysql_native_password
@@ -15,6 +19,7 @@ services:
     image: "docker.elastic.co/logstash/logstash:7.1.0"
     depends_on:
       - mysql
+      - mailcatcher
     volumes:
       - ./pipeline:/usr/share/logstash/pipeline/
       - ./sample_csv:/tmp/sample_csv
@@ -23,6 +28,7 @@ services:
       - mysql
       - redis
       - elasticsearch
+      - mailcatcher
     ports:
       - "5044:5044"
   elasticsearch:
