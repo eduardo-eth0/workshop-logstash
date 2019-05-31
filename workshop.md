@@ -234,4 +234,180 @@ Nosso primeiro log para ser trabalhado vai ser um log de um apache, basicamente 
 
 Antes de você configurar o seu pipeline você vai ter que configurar o **Filebeat** para enviar os logs para o **Logstash**. O **Filebeat** é um agent extremamente leve e fácil de ser configurado, sua função e fazer a coleta de logs e enviar para algum lugar,que no nosso caso é o **Logstash**. O **Filebeat** deve ser instalado na máquina em que os logs estão sendo gerados.
 
-A instalação padrão do **Logstash** já vem com o plugin de *Input* do *beats* instalado por padrão
+Para fazer a instalação do **Filebeat** siga o seguinte [tutorial](https://www.elastic.co/downloads/beats/filebeat "Filebeat").
+
+Vamos no nosso exemplo usar os logs do apache, para que tenhamos uma boa massa de logs vamos usar um projeto chamado **Fake Apache Log Generator**, que pode ser baixado nesse [link](https://github.com/kiritbasu/Fake-Apache-Log-Generator).
+
+Então vamos ao processo de instalação do nosso gerador de logs fake
+
+Primeiro passo vamos clonar o repositório
+
+```
+git clone git@github.com:kiritbasu/Fake-Apache-Log-Generator.git
+```
+Agora que já clonamos o repositório vamos fazer a instalação das dependências, para isso vamos uar o **pip** caso você não tenha ele instalado no seu sistema é necessário fazer a instalação de acordo com seu [sistema operacional](https://packaging.python.org/guides/installing-using-linux-tools/#installing-pip-setuptools-wheel-with-linux-package-managers).
+
+```
+pip install -r requirements.txt
+```
+
+Se tudo ocorreu certo na instalação agora podemos gerar nosso log que será consumido pelo **Filebeat** sem problemas usando o seguinte comando
+
+```
+python apache-fake-log-gen.py -n 100 -o LOG
+```
+
+Esse comando vai ser responsável por gerar 100 linhas log que vamos usar no nosso **Filebeat**
+
+Agora que já temos o arquivo de logs, precisamos fazer a configuração básica do nosso **Filebeat**, para isso basta seguir os passos abaixo
+
+1 - Faça o download do **Filebeat**
+```
+wget https://artifacts.elastic.co/downloads/beats/filebeat/filebeat-7.1.1-linux-x86_64.tar.gz
+```
+
+2 - Exploda o arquivo tar.gz
+
+```
+tar -zxvf filebeat-7.1.1-linux-x86_64.tar.gz
+```
+
+3 - Temos que habilitar o módulo que vamos usar, que no nosso caso será o *apache*, execute o filebeat com a seguinte sintaxe
+
+```
+./filebeat modules enable apache 
+```
+
+4 - Agora vamos fazer a configuração do módulo do apache, aqui não vou me pegar em detalhes da configuração do **Filebeat** apenas vou fazer com que ele envie os logs para onde precisamos
+
+Edite o arquivo *apache.yml* dentro do diretorio *modules.d* presente no diretório de configuração do **Filebeat**
+
+```
+# Module: apache
+# Docs: https://www.elastic.co/guide/en/beats/filebeat/7.1/filebeat-module-apache.html
+
+- module: apache
+  # Access logs
+  access:
+    enabled: true
+
+    # Set custom paths for the log files. If left empty,
+    # Filebeat will choose the paths depending on your OS.
+    var.paths:
+      # Aqui vai o caminho para o path dos logs
+      - /home/eth0/projetos/Fake-Apache-Log-Generator/*.log
+
+  # Error logs
+  error:
+    enabled: false
+
+    # Set custom paths for the log files. If left empty,
+    # Filebeat will choose the paths depending on your OS.
+    #var.paths:
+
+```
+5 - Proximo passo é configurar o *output* do nosso log, no caso do **Filebeat** nós poderiamos jogar ele direto para o **Elasticsearch**, mas no nosso caso iremos colocar ele no **Logstash** para enriquecer um pouco a informação.
+
+Para isso, você deve editar o arquivo *filebeat.yml*
+
+```
+...
+#----------------------------- Logstash output --------------------------------
+output.logstash:
+  # The Logstash hosts
+  hosts: ["localhost:5044"]
+
+  # Optional SSL. By default is off.
+  # List of root certificates for HTTPS server verifications
+  #ssl.certificate_authorities: ["/etc/pki/root/ca.pem"]
+
+  # Certificate for SSL client authentication
+  #ssl.certificate: "/etc/pki/client/cert.pem"
+
+  # Client Certificate Key
+  #ssl.key: "/etc/pki/client/cert.key"
+...
+ 	
+```
+
+Agora já temos o **Filebeat** pronto para fazer o envio dos logs para o **Logstash**, nosso proximo passo é subir o nosso logstash, para isso vamos usar o *docker-compose* que está no nosso [repositorio](https://github.com/eduardo-eth0/workshop-logstash).
+
+Bom primerio passo é copiar nosso arquivo de configuração para a pasta que vai ser mapeada dentro do container docker do **Logstash**
+
+```
+cp files/beats.conf pipeline/beats.conf
+```
+
+Agora vamos subir nosso ecossistema completo
+
+```
+sudo docker-compose -f "docker-compose.yml" up
+```
+Agora vamos subir nosso **Filebeat** para fazer o envio dos logs, vá até o diretório onde o filebeat está instalado e execute o comando.
+
+```
+./filebeat
+```
+Como tudo isso funcionou? Bom, vamos ver agora nosso arquivo de configuração e discutir ele passo a passo
+
+```
+input {
+  beats {
+    port => 5044
+  }
+}
+
+filter {
+  grok {
+    match => { "message" => "%{COMBINEDAPACHELOG}" }
+  }
+  geoip {
+    source => "clientip"
+  }
+
+  mutate {
+    remove_field => ["message","[agent][version]","[agent][ephemeral_id]","[agent][id]","[host][architecture]"]
+  }
+
+  translate {
+    field => "[response]"
+    destination => "[response_description]"
+    dictionary => {
+        "100" => "Continue"
+        "101" => "Switching Protocols"
+        "200" => "OK"
+        "301" => "Moved Permanently"
+        "304" => "Not Modified"
+        "400" => "Bad Request"
+        "403" => "Forbidden"
+        "409" => "Conflict"
+        "500" => "Server Error"
+      }
+      fallback => "No description"
+  }
+  
+  if [geoip.country_name] == "United States" {
+    mutate { 
+      add_field => { "gringos" => "Yes" }
+    }
+  } else {
+    mutate {
+      add_field => { "gringos" => "No" }
+    }
+  }
+
+}
+output {
+    stdout {
+      codec => rubydebug
+    }
+    elasticsearch {
+      hosts => "elasticsearch:9200"
+      manage_template => false
+      index => "%{[@metadata][beat]}-%{[@metadata][version]}-%{+YYYY.MM.dd}" 
+    }
+}
+
+```
+## Buscando dados em uma base de dados
+
