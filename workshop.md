@@ -411,3 +411,126 @@ output {
 ```
 ## Buscando dados em uma base de dados
 
+Nosso próximo pipeline agora vai ser sobre como consumir um arquivo csv, e enriquecer essa informação fazendo a busca em uma base de dados.
+
+```
+input {
+    file{
+        path => "/tmp/sample_csv/sample.csv"
+    }
+}
+filter {
+    csv {
+        columns => ["id","value"]
+    }
+
+    jdbc_static {
+        jdbc_user => "root"
+        jdbc_password => "x"
+        jdbc_driver_library => "/tmp/connector/mysql-connector-java-8.0.16.jar"
+        jdbc_driver_class => "com.mysql.cj.jdbc.Driver"
+        jdbc_connection_string => "jdbc:mysql://mysql:3306/customer"
+        
+        loaders => [
+            {
+                id => "remote-customers"
+                query => "select id,first_name,last_name, email, gender from user_data"
+                local_table => "customers"
+            }
+        ]
+        local_db_objects => [
+            {
+                name => "customers"
+                index_columns => ["id"]
+                columns => [
+                    ["id","varchar(10)"],
+                    ["first_name","varchar(255)"],
+                    ["last_name","varchar(255)"],
+                    ["email","varchar(255)"],
+                    ["gender","varchar(255)"]
+                ]
+            }
+        ]
+        local_lookups => [
+            {
+                id => "local-customers"
+                query => "select email,first_name,last_name,gender from customers where id = :id"
+                parameters => { id => "[id]"}
+                target => "customer"
+            }
+        ]
+
+        loader_schedule => "*/30 * * * *"
+
+        add_field => { customer_email => "%{[customer][0][email]}"}
+        add_field => { first_name => "%{[customer][0][first_name]}"}
+        add_field => { last_name => "%{[customer][0][last_name]}"}
+        add_field => { gender => "%{[customer][0][gender]}"}
+    }
+}
+output {
+    stdout {
+      codec => rubydebug
+    }
+    elasticsearch {
+      hosts => "elasticsearch:9200"
+      manage_template => false
+      index => "customer-%{+YYYY.MM.dd}" 
+    }
+}
+```
+## Conversando com API
+
+```
+input {
+    http_poller {
+        urls => {
+            todos => {
+                # Supports all options supported by ruby's Manticore HTTP client
+                method => get
+                url => "https://jsonplaceholder.typicode.com/albums"
+                headers => {
+                    Accept => "application/json"
+                }
+            }
+        }
+        request_timeout => 60
+        schedule => { cron => "*/5 * * * *"}
+        codec => "json"
+        metadata_target => "http_poller_metadata"
+    }
+}
+filter {
+    http {
+        url => "https://jsonplaceholder.typicode.com/users"
+        verb => "GET"
+        query => {
+            "id" => "%{[userId]}"
+        }
+        body_format => "json"
+        add_field => { username => "%{[body][0][username]}"}
+    }
+}
+output {
+    stdout {}
+    email {
+        to => "test@logstash.com"
+        from => "logstash@test.com"
+        subject => 'Alert '
+        body => "Tags: tag\\n\\Content:\\n%adfasdf"
+        address => "mailcatcher"
+        port => "1025" 
+    }
+
+    http {
+        url => "https://api.telegram.org/bot865012397:AAFd-GrFo79vRIXUZIDQLggEdgPew9dGcz8/sendMessage?chat_id=685316770"
+        format => "message"
+        content_type => "application/json"
+        http_method => "post"
+        message => ' {
+            "text": "O usuário %{[body][0][username]} criou um album novo"
+        }'
+    }
+}
+```
+
