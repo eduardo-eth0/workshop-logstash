@@ -112,13 +112,13 @@ Outro ponto bem importante são os codecs que nos ajudam a processar saidas do t
 
 Para verificar a sua versão do java use o comando:
 
-```
+```bash
 java -version
 ```
 
 Você deve obter uma saida parecida com essa:
 
-```
+```bash
 openjdk version "11.0.3" 2019-04-16
 OpenJDK Runtime Environment (build 11.0.3+7-Ubuntu-1ubuntu219.04.1) 
 OpenJDK 64-Bit Server VM (build 11.0.3+7-Ubuntu-1ubuntu219.04.1, mixed mode, sharing)
@@ -144,32 +144,32 @@ deb https://artifacts.elastic.co/packages/6.x/apt stable main
 
 Faça o Download da chave pública
 
-```
+```bash
 wget -qO - https://artifacts.elastic.co/GPG-KEY-elasticsearch | sudo apt-key add -
 ```
 
 Antes de proceguir é necessário instalar o pacote * apt-transport-https * no Debian
 
-```
+```bash
 sudo apt-get install apt-transport-https
 ```
 
 Agora salve o endereço do repositório em * /etc/apt/sources.list.d/elastic-7.x.list *
 
-```
+```bash
 echo "deb https://artifacts.elastic.co/packages/7.x/apt stable main" | sudo tee -a /etc/apt/sources.list.d/elastic-7.x.list
 
 ```
 Rode um * apt update * para deixar o repositório pronto para uso, e depois faça a instalação do *Logstash*
 
-```
+```bash
 apt update && apt -y install logstash 
 ```
 #### YUM
 
 Faça o Download da chave pública
 
-```
+```bash
 rpm --import https://artifacts.elastic.co/GPG-KEY-elasticsearch
 ```
 
@@ -187,7 +187,7 @@ type=rpm-md
 ```
 Agora seu repositório já vai estar pronto par ao uso
 
-```
+```bash
 sudo yum install logstash
 ```
 ## Tratando seu primeiro evento
@@ -205,7 +205,7 @@ Um pipeline então é constituido de 3 fases:
 
 Bom agora que você já tem uma ideia de como funciona vamos subir nosso primeiro pipeline básico.
 
-```
+```bash
 cd logstash-7.1.0
 bin/logstash -e 'input { stdin { } } output { stdout {} }'
 ```
@@ -220,7 +220,7 @@ Descrevendo o pipeline a seguir ele escuta a entrada stdin e move tudo que entra
 
 Depois de iniciar o Logstash, espere até ver "Pipeline main started" e, em seguida, insira hello world no prompt de comando:
 
-```
+```bash
 hello world
 2013-11-21T01:22:14.405+0000 0.0.0.0 hello world
 ```
@@ -242,18 +242,18 @@ Então vamos ao processo de instalação do nosso gerador de logs fake
 
 Primeiro passo vamos clonar o repositório
 
-```
+```bash
 git clone git@github.com:kiritbasu/Fake-Apache-Log-Generator.git
 ```
 Agora que já clonamos o repositório vamos fazer a instalação das dependências, para isso vamos uar o **pip** caso você não tenha ele instalado no seu sistema é necessário fazer a instalação de acordo com seu [sistema operacional](https://packaging.python.org/guides/installing-using-linux-tools/#installing-pip-setuptools-wheel-with-linux-package-managers).
 
-```
+```bash
 pip install -r requirements.txt
 ```
 
 Se tudo ocorreu certo na instalação agora podemos gerar nosso log que será consumido pelo **Filebeat** sem problemas usando o seguinte comando
 
-```
+```bash
 python apache-fake-log-gen.py -n 100 -o LOG
 ```
 
@@ -262,19 +262,19 @@ Esse comando vai ser responsável por gerar 100 linhas log que vamos usar no nos
 Agora que já temos o arquivo de logs, precisamos fazer a configuração básica do nosso **Filebeat**, para isso basta seguir os passos abaixo
 
 1 - Faça o download do **Filebeat**
-```
+```bash
 wget https://artifacts.elastic.co/downloads/beats/filebeat/filebeat-7.1.1-linux-x86_64.tar.gz
 ```
 
 2 - Exploda o arquivo tar.gz
 
-```
+```bash
 tar -zxvf filebeat-7.1.1-linux-x86_64.tar.gz
 ```
 
 3 - Temos que habilitar o módulo que vamos usar, que no nosso caso será o *apache*, execute o filebeat com a seguinte sintaxe
 
-```
+```bash
 ./filebeat modules enable apache 
 ```
 
@@ -282,7 +282,7 @@ tar -zxvf filebeat-7.1.1-linux-x86_64.tar.gz
 
 Edite o arquivo *apache.yml* dentro do diretorio *modules.d* presente no diretório de configuração do **Filebeat**
 
-```
+```bash
 # Module: apache
 # Docs: https://www.elastic.co/guide/en/beats/filebeat/7.1/filebeat-module-apache.html
 
@@ -310,7 +310,7 @@ Edite o arquivo *apache.yml* dentro do diretorio *modules.d* presente no diretó
 
 Para isso, você deve editar o arquivo *filebeat.yml*
 
-```
+```bash
 ...
 #----------------------------- Logstash output --------------------------------
 output.logstash:
@@ -334,23 +334,23 @@ Agora já temos o **Filebeat** pronto para fazer o envio dos logs para o **Logst
 
 Bom primerio passo é copiar nosso arquivo de configuração para a pasta que vai ser mapeada dentro do container docker do **Logstash**
 
-```
+```bash
 cp files/beats.conf pipeline/beats.conf
 ```
 
 Agora vamos subir nosso ecossistema completo
 
-```
+```bash
 sudo docker-compose -f "docker-compose.yml" up
 ```
 Agora vamos subir nosso **Filebeat** para fazer o envio dos logs, vá até o diretório onde o filebeat está instalado e execute o comando.
 
-```
+```bash
 ./filebeat
 ```
 Como tudo isso funcionou? Bom, vamos ver agora nosso arquivo de configuração e discutir ele passo a passo
 
-```
+```bash
 input {
   beats {
     port => 5044
@@ -413,7 +413,7 @@ output {
 
 Nosso próximo pipeline agora vai ser sobre como consumir um arquivo csv, e enriquecer essa informação fazendo a busca em uma base de dados.
 
-```
+```bash
 input {
     file{
         path => "/tmp/sample_csv/sample.csv"
@@ -481,7 +481,7 @@ output {
 ```
 ## Conversando com API
 
-```
+```bash
 input {
     http_poller {
         urls => {
