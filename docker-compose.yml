@@ -51,3 +51,26 @@ services:
       - "5601:5601"
     links:
       - elasticsearch
+  filebeat:
+    image: docker.elastic.co/beats/filebeat:7.1.0
+    user: root
+    volumes:
+      - ./filebeat/filebeat.yml:/usr/share/filebeat/filebeat.yml:ro
+      - /var/lib/docker/containers:/var/lib/docker/containers:ro
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    links:
+      - logstash
+    command: filebeat -e -strict.perms=false
+    depends_on:
+      - logstash
+  fakelog:
+    build: ./fakelog
+    labels:
+      - co.elastic.logs/module=apache2
+      - co.elastic.logs/fileset.stdout=access
+      - co.elastic.logs/fileset.stderr=error
+    depends_on:
+      - logstash
+      - filebeat
+      - elasticsearch
+      - kibana
