@@ -1,0 +1,44 @@
+{
+    "people": [
+        {
+            "id": 10,
+            "name": "Astolfo"
+        },
+        {
+            "id": 11,
+            "name": "Joao"
+        },
+        {
+            "id": 12,
+            "name": "Marcos"
+        }
+
+    ],
+    "products": [
+        {
+            "id": 20,
+            "userId": 10,
+            "productName": "Garrafa termica" 
+        },
+        {
+            "id": 30,
+            "userId": 11,
+            "productName": "Caneca" 
+        },
+        {
+            "id": 40,
+            "userId": 12,
+            "productName": "Pasta" 
+        },
+        {
+            "id": 50,
+            "userId": 13,
+            "productName": "Curso de logstash" 
+        },
+        {
+            "id": 60,
+            "userId": 14,
+            "productName": "Mesa de computador" 
+        }
+    ]
+}

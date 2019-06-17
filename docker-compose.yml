@@ -1,5 +1,9 @@
 version: '3'
 services:
+  apifake:
+    build: ./apifake
+    ports:
+      - 3000:3000
   mailcatcher:
     image: schickling/mailcatcher
     ports:
