@@ -105,6 +105,40 @@ Outro ponto bem importante são os codecs que nos ajudam a processar saidas do t
 - SNS
 - Pagerduty
 
+## Alguns exemplos de deploy do Logstash
+
+Nessa primeira "Arquitetura" podemos ver um envio simples de dados para o **Logstash** sendo feito pelo **Beats**, esse seria um dos cenários mais simples de deploy do **Logstash** que poderiamos ter.
+
+![](./images/deploy_logstash_1.jpg)
+
+Nesse modelo, temos os agents do **Beats** coletando as informações e enviado de forma direta para o **Logstash**, esse é um cenário comum quando queremos enriquecer informações por isso colocamos o **Beats** para enviar os dados para o **Logstash**
+
+Outro modelo de deploy que podemos ter é o **Logstash** coletando dados de outros dispositivos além dos logs que são enviados pelo **Beats**.
+
+Nesse modelo temos a coleta de dados de locais como:
+- Equipamentos de rede
+- Firewalls
+- Appliances
+- Aplicativos
+- IoT
+- Sensores
+- Dados relativos a segurança
+
+Essas fontes de dados podem fazer o envio direto para o **Logstash** via syslog, tcp, udp ou qualquer outro método que seja possivel fazer essa conexão para o envio dos dados. 
+
+Como você já sabe que o **Logstash** pode ser escalado horizontalmente, você pode enviar também os dados para um load balancer e ter os seus pipelines sendo balanceados.
+
+![](./images/deploy_logstash_2.jpg)
+
+Outro tipo de deploy que pode ser feito é um deploy onde enviamos os logs para um centralizador, que pode ser um servidor de fila ou um stream de dados. 
+
+Nesse tipo de deploy você consegue garantir um grande qualidade na entrega das mensagens e também consegue ter um controle melhor do processamento delas no **Logstash**. 
+
+Para equipamentos que não tem a capacidade de enviar os logs para um servidor de fila o ideal é colocar um servidor de **Logstash** antes para poder fazer esse envio, então equipamentos de rede, firewall e appliances são enviados para um primeiro servidor de **Logstash** que vai fazer somente o papel de **forwarder** para o servidor de filas.
+
+![](./images/deploy_logstash_3.jpg)
+
+
 ## Bora começar isso?
 
 ### Instalando o Logstash
